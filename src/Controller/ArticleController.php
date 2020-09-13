@@ -38,7 +38,7 @@ class ArticleController extends AbstractController
             ))
             ->add("body", TextareaType::class, array(
                 'required'=> false,
-                'attr' => array('class' => 'form-control')
+                 'attr' => array('class' => 'form-control')
             ))
             ->add("save", SubmitType::class, array(
                 'label' => 'Create article',
@@ -46,9 +46,37 @@ class ArticleController extends AbstractController
             ))
             ->getForm();
 
+        $form->handleRequest($request);
+        if($form->isSubmitted() && $form->isValid())
+        {
+            $article = $form->getData();
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($article);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('article_list');
+        }
+        
         return $this->render("articles/new.html.twig", array(
             'form' => $form->createView()
         ));
+    }
+
+    /**
+     * @Route("/article/delete/{id}", methods={"DELETE"})
+     */
+    public function delete(Request $request, $id)
+    {
+        $article = $this->getDoctrine()
+        ->getRepository(Article::class)->find($id);
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->remove($article);
+        $entityManager->flush();
+
+        $response = new Response();
+        $response->send();
     }
 
     /**
@@ -56,9 +84,11 @@ class ArticleController extends AbstractController
      */
     public function show(int $id)
     {
-        $article = $this->getDoctrine()->getRepository(Article::class)->find($id);
+        $article = $this->getDoctrine()
+        ->getRepository(Article::class)->find($id);
 
-        return $this->render("articles/show.html.twig", array("article" => $article));
+        return $this->render("articles/show.html.twig", array(
+            "article" => $article));
     }
 
     // /**
